@@ -31,7 +31,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/notifications/${userId}`);
+        const response = await axios.get(`http://localhost:8000/notifications/${userId}`);
         setNotifications(response.data);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
 
   const markNotificationAsRead = async (notificationId) => {
     try {
-      await axios.put(`http://localhost:3000/notifications/${notificationId}/read`);
+      await axios.put(`http://localhost:8000/notifications/${notificationId}/read`);
       setNotifications(prevNotifications =>
         prevNotifications.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );

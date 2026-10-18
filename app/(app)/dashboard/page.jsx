@@ -12,7 +12,8 @@ import {
   faUsers,
   faFileInvoiceDollar,
   faCashRegister,
-  faCartShopping
+  faCartShopping,
+  faChartLine
 } from "@fortawesome/free-solid-svg-icons";
 
 import ContentTop from "@/components/ContentTop";
@@ -49,12 +50,6 @@ const Dashboard = () => {
       subText: "Kelola item dan lacak inventaris.",
     },
     {
-      path: "/dashboard/outlet",
-      text: "Outlet",
-      icon: faStore,
-      subText: "Kelola toko dan lokasi Anda.",
-    },
-    {
       path: "/dashboard/stock-cards",
       text: "Stock",
       icon: faBoxOpen,
@@ -71,6 +66,12 @@ const Dashboard = () => {
       text: "Penerimaan",
       icon: faTruck,
       subText: "Lacak penerimaan barang masuk.",
+    },
+    {
+      path: "/dashboard/laporan",
+      text: "Laporan",
+      icon: faChartLine,
+      subText: "Rekap pemasukan dan pengeluaran.",
     },
     {
       path: "/dashboard/users",

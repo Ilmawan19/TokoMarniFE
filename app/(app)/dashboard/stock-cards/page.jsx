@@ -44,12 +44,10 @@ export default function Page() {
   const [selectedData, setSelectedData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [outletId, setOutletId] = useState("");
   const [role, setRole] = useState("");
   const [selectedItem, setSelectedItem] = useState("");
   const itemsPerPage = 10;
 
-  // useCrud hook berisi fetchAllData, create, update, remove, pagination support
   const {
     data: cards,
     token,
@@ -63,8 +61,6 @@ export default function Page() {
     setRole(decoded?.role);
   }, [token]);
 
-  const { data: outlets, fetchAllData: getOutlets } = useCrud("outlets");
-
   const {
     data: items,
     fetchAllData: getItems,
@@ -76,14 +72,13 @@ export default function Page() {
   useEffect(() => {
     if (!token) return;
     loadData();
-    getOutlets();
-  }, [currentPage, search, outletId, token]);
+  }, [currentPage, search, token]);
 
   useEffect(() => {
     if (!token) return;
     setCurrentPage(1);
     loadData();
-  }, [search, outletId]);
+  }, [search]);
 
   useEffect(() => {
     if (selectedItem) {
@@ -95,7 +90,6 @@ export default function Page() {
     try {
       await getCards({
         item_id: selectedItem?.id || "",
-        outlet_id: selectedItem?.outlet?.id || "",
         perPage: 9999,
       });
     } catch (error) {
@@ -103,12 +97,10 @@ export default function Page() {
     }
   }
 
-  // Reset form ketika selectedData berubah
   useEffect(() => {
     reset(selectedData || {});
   }, [selectedData, reset]);
 
-  // Handle page change untuk pagination
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
@@ -117,7 +109,6 @@ export default function Page() {
     getItems({
       page: currentPage,
       perPage: itemsPerPage,
-      outlet_id: outletId,
       search,
     });
   }
@@ -128,7 +119,6 @@ export default function Page() {
         No: index + 1,
         ID: data.id,
         Item: data.item?.name,
-        Outlet: data.outlet?.name,
         "Stock IN": data.stock_in,
         "Stock OUT": data.stock_out,
         "Current Stock": data.current_stock,
@@ -165,26 +155,7 @@ export default function Page() {
               </h1>
             </div>
 
-            {role == "ADMIN" && (
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <select
-                    id="outlet_id"
-                    className="h-11 appearance-none border border-slate-300 rounded-lg w-full sm:w-48 text-sm py-1 pl-4 pr-10 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                    value={outletId}
-                    onChange={(e) => setOutletId(e.target.value)}
-                  >
-                    <option value="">All Outlets</option>
-                    {outlets?.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {row.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
 
           <div className="mb-6 relative">
             <FontAwesomeIcon
@@ -208,9 +179,6 @@ export default function Page() {
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     ID
-                  </TableHead>
-                  <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Outlet
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Name
@@ -240,9 +208,6 @@ export default function Page() {
                     </TableCell>
                     <TableCell className="p-4 text-slate-500 font-mono text-xs">
                       {data.id}
-                    </TableCell>
-                    <TableCell className="p-4 text-slate-800 font-semibold">
-                      {data?.outlet?.name}
                     </TableCell>
                     <TableCell className="p-4 text-slate-800 font-medium">
                       {data.name}
@@ -311,10 +276,7 @@ export default function Page() {
               {selectedItem?.name}
             </DialogTitle>
             <DialogDescription className="text-slate-600 pt-1">
-              {selectedItem?.description} <br />
-              <span className="text-xs text-slate-400 mt-1 block">
-                Outlet: {selectedItem?.outlet?.name}
-              </span>
+              {selectedItem?.description}
             </DialogDescription>
           </DialogHeader>
 
@@ -347,87 +309,81 @@ export default function Page() {
               <TabsContent value="table" className="mt-4">
                 <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-slate-200">
                   <Table className="relative">
-                    <TableHeader className="bg-slate-100/80 sticky top-0">
-                      <TableRow>
-                        <TableHead className="w-[60px] p-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          No.
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          ID
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Item
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Outlet
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Stock IN
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Stock OUT
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Current Stock
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Type
-                        </TableHead>
-                        <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Date
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {cards?.map((data, index) => (
-                        <TableRow
-                          key={data.id}
-                          className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors"
+<TableHeader className="bg-slate-100/80 sticky top-0">
+                    <TableRow>
+                      <TableHead className="w-[60px] p-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        No.
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        ID
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Item
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Stock IN
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Stock OUT
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Current Stock
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Type
+                      </TableHead>
+                      <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Date
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cards?.map((data, index) => (
+                      <TableRow
+                        key={data.id}
+                        className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors"
+                      >
+                        <TableCell className="p-4 text-center font-medium text-slate-700">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="p-4 font-mono text-xs text-slate-500">
+                          {data.id}
+                        </TableCell>
+                        <TableCell className="p-4 text-slate-800 font-medium">
+                          {data.item?.name}
+                        </TableCell>
+                        <TableCell
+                          className={`p-4 font-semibold ${
+                            data.stock_in !== 0
+                              ? "text-emerald-600 bg-emerald-50"
+                              : "text-slate-400"
+                          }`}
                         >
-                          <TableCell className="p-4 text-center font-medium text-slate-700">
-                            {index + 1}
-                          </TableCell>
-                          <TableCell className="p-4 font-mono text-xs text-slate-500">
-                            {data.id}
-                          </TableCell>
-                          <TableCell className="p-4 text-slate-800 font-medium">
-                            {data.item?.name}
-                          </TableCell>
-                          <TableCell className="p-4 text-slate-600">
-                            {data.outlet?.name}
-                          </TableCell>
-                          <TableCell
-                            className={`p-4 font-semibold ${
-                              data.stock_in !== 0
-                                ? "text-emerald-600 bg-emerald-50"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            + {data.stock_in}
-                          </TableCell>
-                          <TableCell
-                            className={`p-4 font-semibold ${
-                              data.stock_out !== 0
-                                ? "text-rose-600 bg-rose-50"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            - {data.stock_out}
-                          </TableCell>
-                          <TableCell className="p-4 font-semibold text-slate-800">
-                            {data.current_stock}
-                          </TableCell>
-                          <TableCell className="p-4 capitalize text-slate-600">
-                            {data.transaction_type.replace("_", " ")}
-                          </TableCell>
-                          <TableCell className="p-4 text-slate-600 text-sm">
-                            {moment(data.created_at).format(
-                              "DD MMM YYYY, HH:mm"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                          + {data.stock_in}
+                        </TableCell>
+                        <TableCell
+                          className={`p-4 font-semibold ${
+                            data.stock_out !== 0
+                              ? "text-rose-600 bg-rose-50"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          - {data.stock_out}
+                        </TableCell>
+                        <TableCell className="p-4 font-semibold text-slate-800">
+                          {data.current_stock}
+                        </TableCell>
+                        <TableCell className="p-4 capitalize text-slate-600">
+                          {data.transaction_type.replace("_", " ")}
+                        </TableCell>
+                        <TableCell className="p-4 text-slate-600 text-sm">
+                          {moment(data.created_at).format(
+                            "DD MMM YYYY, HH:mm"
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
                   </Table>
                 </div>
               </TabsContent>

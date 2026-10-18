@@ -43,7 +43,6 @@ export default function Page() {
   const [deleteWarningOpen, setDeleteWarningOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [outletId, setOutletId] = useState("");
   const { toast } = useToast();
   const itemsPerPage = 10;
 
@@ -60,8 +59,6 @@ export default function Page() {
     totalPages,
   } = useCrud("items");
 
-  const { data: outlets, fetchAllData: getOutlets } = useCrud("outlets");
-
   const {
     register,
     handleSubmit,
@@ -72,8 +69,7 @@ export default function Page() {
   useEffect(() => {
     if (!token) return;
     loadData();
-    getOutlets();
-  }, [currentPage, search, outletId, token]);
+  }, [currentPage, search, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -89,22 +85,20 @@ export default function Page() {
     try {
       if (selectedData) {
         const newData = {
-          outlet_id: outletId,
           name: data?.name,
           description: data?.description,
           price: parseInt(data?.price),
           unit: data?.unit,
           stock: data?.stock,
         };
-        await update(selectedData.id, { ...newData, outlet_id: outletId });
+        await update(selectedData.id, newData);
         toast({
           title: "Update Successful!",
           description: "Item data has been updated.",
           variant: "success",
         });
       } else {
-        const newData = { ...data };
-        await create({ ...newData, outlet_id: outletId });
+        await create(data);
         toast({
           title: "Creation Successful!",
           description: "A new item has been added to the list.",
@@ -153,7 +147,6 @@ export default function Page() {
   const handleEdit = (item) => {
     setSelectedData(item);
     errorReset();
-    setOutletId(item.outlet_id);
     setIsOpen(true);
   };
 
@@ -161,7 +154,6 @@ export default function Page() {
     fetchAllData({
       page: currentPage,
       perPage: itemsPerPage,
-      outlet_id: outletId,
       search,
     });
   }
@@ -185,45 +177,18 @@ export default function Page() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <select
-                  id="outlet_id"
-                  className="h-11 appearance-none border border-slate-300 rounded-lg w-full sm:w-48 text-sm py-1 pl-4 pr-10 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                  value={outletId}
-                  onChange={(e) => setOutletId(e.target.value)}
-                >
-                  <option value="">All Outlets</option>
-                  {outlets?.map((row) => (
-                    <option key={row.id} value={row.id}>
-                      {row.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                className="h-11 px-5 inline-flex items-center justify-center rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-all font-semibold gap-2 shadow-sm hover:shadow-md transform hover:-translate-y-px"
-                onClick={() => {
-                  if (outletId) {
-                    setSelectedData(null);
-                    reset({});
-                    errorReset();
-                    setIsOpen(true);
-                  } else {
-                    toast({
-                      title: "Please Select an Outlet",
-                      description:
-                        "You must select an outlet before adding a new item.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <FontAwesomeIcon icon={faPlus} />
-                Add Item
-              </Button>
-            </div>
+            <Button
+              className="h-11 px-5 inline-flex items-center justify-center rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-all font-semibold gap-2 shadow-sm hover:shadow-md transform hover:-translate-y-px"
+              onClick={() => {
+                setSelectedData(null);
+                reset({});
+                errorReset();
+                setIsOpen(true);
+              }}
+            >
+              <FontAwesomeIcon icon={faPlus} />
+              Add Item
+            </Button>
           </div>
 
           <div className="mb-6 relative">
@@ -248,9 +213,6 @@ export default function Page() {
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     ID
-                  </TableHead>
-                  <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Outlet
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Name
@@ -283,9 +245,6 @@ export default function Page() {
                     </TableCell>
                     <TableCell className="p-4 text-slate-500 font-mono text-xs">
                       {data.id}
-                    </TableCell>
-                    <TableCell className="p-4 text-slate-800 font-semibold">
-                      {data?.outlet?.name}
                     </TableCell>
                     <TableCell className="p-4 text-slate-800 font-medium">
                       {data.name}
@@ -336,7 +295,7 @@ export default function Page() {
                 />
                 <p className="text-xl font-semibold">No Items Found</p>
                 <p className="text-sm text-slate-400">
-                  Try adjusting your search or filters to find what you're
+                  Try adjusting your search or filters to find what you&apos;re
                   looking for.
                 </p>
               </div>
@@ -394,11 +353,6 @@ export default function Page() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 pt-4">
-            {error?.outlet_id && (
-              <div className="bg-red-50 text-red-700 text-sm p-3 rounded-md -mt-2">
-                {error.outlet_id}, please select an outlet first.
-              </div>
-            )}
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="name"
@@ -408,7 +362,7 @@ export default function Page() {
               </Label>
               <Input
                 id="name"
-                placeholder="e.g., Paracetamol 500mg"
+                placeholder="e.g., Indomie"
                 className="h-11"
                 {...register("name", { required: true })}
               />
@@ -449,6 +403,7 @@ export default function Page() {
                   {...register("price", {
                     required: true,
                     valueAsNumber: true,
+                    min: { value: 1, message: "Price must be greater than 0" },
                   })}
                 />
                 {error?.price && (
@@ -497,6 +452,7 @@ export default function Page() {
                   {...register("stock", {
                     required: true,
                     valueAsNumber: true,
+                    min: { value: 1, message: "Stock must be at least 1" },
                   })}
                 />
                 {error?.stock && (

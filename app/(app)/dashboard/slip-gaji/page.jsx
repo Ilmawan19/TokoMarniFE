@@ -92,7 +92,6 @@ export default function Page() {
             defaultValues: {
                 email: email,
                 nama: name,
-                outlet: outlet,
                 userId: id,
             },
         });
@@ -125,10 +124,6 @@ export default function Page() {
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="nama" className="text-right">Nama</Label>
                     <Input id="nama" className="col-span-3" value={name} readOnly {...register("nama")} />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="outlet" className="text-right">Outlet</Label>
-                    <Input id="outlet" className="col-span-3" {...register("outlet")} />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="userId" className="text-right">User ID</Label>
@@ -176,7 +171,6 @@ export default function Page() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[50px] p-2 bg-[#8BB2B2] text-center text-white">No.</TableHead>
-                                    <TableHead className="p-2 bg-[#8BB2B2] text-left text-white">Outlet</TableHead>
                                     <TableHead className="p-2 bg-[#8BB2B2] text-left text-white">Name</TableHead>
                                     <TableHead className="p-2 bg-[#8BB2B2] text-left text-white">Email</TableHead>
                                     <TableHead className="p-2 bg-[#8BB2B2] text-left text-white">Role</TableHead>
@@ -187,7 +181,6 @@ export default function Page() {
                                 {users.map((row, index) => (
                                     <TableRow key={row.id} className="border-b hover:bg-gray-100 transition-colors">
                                         <TableCell className="p-2 text-center font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
-                                        <TableCell className="p-2">{row.outlet?.name}</TableCell>
                                         <TableCell className="p-2">{row.name}</TableCell>
                                         <TableCell className="p-2">{row.email}</TableCell>
                                         <TableCell className="p-2">{row.role}</TableCell>
@@ -226,7 +219,6 @@ export default function Page() {
                             userData={selectedData}
                             onClose={() => setIsOpen(false)}
                             name={selectedData.name}
-                            outlet={selectedData.outlet?.name}
                             id={selectedData.id}
                         />
                     )}

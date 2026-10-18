@@ -13,7 +13,7 @@ import {
   faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
-import logo from "../public/images/KasKU..png";
+import logo from "../public/images/TokoMarni.jpeg";
 import LogoutDialog from "./ui/LogOutDialog";
 import { useRouter } from "next/navigation";
 import nookies from "nookies";
@@ -25,7 +25,6 @@ export const Header = () => {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [token, setToken] = useState(null);
-  const [outlet, setOutlet] = useState("");
   const [lastSync, setLastSync] = useState("");
   const [isOnline, setIsOnline] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -44,7 +43,6 @@ export const Header = () => {
       try {
         const decoded = jwtDecode(accessToken);
         setToken(decoded);
-        setOutlet(decoded.outlet);
 
         const lastSyncTime = localStorage.getItem("lastSyncTime");
         if (lastSyncTime) {
@@ -119,10 +117,6 @@ export const Header = () => {
                 <p className="font-medium">{lastSync}</p>
             </span>
             <div className="h-4 w-px bg-slate-200"></div>
-            <span className="flex items-center gap-2 text-slate-500" title={`Lokasi outlet: ${token?.outlet_id}`}>
-                <FontAwesomeIcon icon={faMapMarkerAlt} className="text-slate-400" />
-                <p className="font-medium">{token?.outlet_id}</p>
-            </span>
           </div>
 
           <span

@@ -5,11 +5,11 @@ import nookies from "nookies";
 
 const useCrud = (endpoint) => {
   const [data, setData] = useState([]);
+  const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
   const [role, setRole] = useState(null);
-  const [outletId, setOutletId] = useState(null);
 
   useEffect(() => {
     const cookies = document.cookie.split(";").reduce((acc, cookie) => {
@@ -29,7 +29,6 @@ const useCrud = (endpoint) => {
     if (token) {
       const decoded = jwtDecode(token);
       setRole(decoded.role);
-      setOutletId(decoded.outlet_id);
     }
   }, []);
 
@@ -40,10 +39,6 @@ const useCrud = (endpoint) => {
   const fetchAllData = async (filters = {}) => {
     setLoading(true);
     try {
-      if (role !== "ADMIN") {
-        filters.outlet_id = outletId;
-      }
-
       const queryParams = new URLSearchParams(filters).toString();
       const url = `${process.env.NEXT_PUBLIC_API_URL}/${endpoint}?${queryParams}`;
       const res = await axios.get(url, {
@@ -52,6 +47,7 @@ const useCrud = (endpoint) => {
         },
       });
       setData(res?.data?.data);
+      setResponse(res?.data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch data");
     } finally {
@@ -142,6 +138,7 @@ const useCrud = (endpoint) => {
   return {
     token,
     data,
+    response,
     loading,
     error,
     errorReset,
@@ -150,7 +147,6 @@ const useCrud = (endpoint) => {
     update,
     remove,
     login,
-    outletId,
   };
 };
 

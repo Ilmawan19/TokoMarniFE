@@ -21,29 +21,22 @@ const ItemHeader = ({ setSearchItem, search, setSearch }) => {
   const { fetchAllData: getOrderOnHold, data: orderOnHold } =
     useCrud(`orders/hold`);
 
-  const [outletId, setOutletId] = useState(null);
   const params = useParams();
 
   const [selectedOrder, setSetselectedOrder] = useState(params.id || "");
-
-  useEffect(() => {
-    if (!token) return;
-    const decoded = jwtDecode(token);
-    setOutletId(decoded.outlet_id);
-  }, [token]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
   };
 
   const searchItems = useCallback(async () => {
-    if (!search.trim() || !outletId) return;
+    if (!search.trim()) return;
     try {
-      await fetchItems({ search, outlet_id: outletId });
+      await fetchItems({ search });
     } catch (error) {
       console.error("Error fetching items:", error);
     }
-  }, [search, outletId]);
+  }, [search]);
 
   useEffect(() => {
     setSearchItem(items);
@@ -56,11 +49,8 @@ const ItemHeader = ({ setSearchItem, search, setSearch }) => {
   }, [search, searchItems]);
 
   useEffect(() => {
-    if (!outletId) return;
-    getOrderOnHold({
-      outlet_id: outletId,
-    });
-  }, [outletId]);
+    getOrderOnHold();
+  }, []);
 
   useEffect(() => {
     selectedOrder && router.push(`/dashboard/pos/${selectedOrder}`);

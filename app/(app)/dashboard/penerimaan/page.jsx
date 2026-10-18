@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
@@ -37,14 +38,22 @@ import Pagination from "@/components/Pagination";
 import nookies from "nookies";
 import { jwtDecode } from "jwt-decode";
 import Select from "react-select";
-import logoReception from "../../../../public/images/KasKU..png";
+import logoReception from "../../../../public/images/TokoMarni.jpeg";
 import Image from "next/image";
-import html2pdf from "html2pdf.js";
 import moment from "moment";
 import { useToast } from "@/hooks/use-toast";
 import numeral from "numeral";
+import dynamic from "next/dynamic";
+
+const Html2Pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
 
 export default function Page({}) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -53,9 +62,7 @@ export default function Page({}) {
   const [selectedRow, setSelectedRow] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [outletid, setOutletid] = useState(""); // For form
   const [role, setRole] = useState("");
-  const [outletId, setOutletId] = useState(""); // For table filter
   const [name, setName] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const { toast } = useToast();
@@ -72,22 +79,7 @@ export default function Page({}) {
     totalPages,
   } = useCrud("receptions");
 
-  const { data: outlets, fetchAllData: getOutlets } = useCrud("outlets");
-
   const { data: items, fetchAllData: getItems } = useCrud("items");
-
-  const outletOptions = outlets?.map((row) => ({
-    value: row.id,
-    label: row.name,
-  }));
-
-  useEffect(() => {
-    if (!outletid) {
-      return;
-    }
-    getItems({ outlet_id: outletid });
-    setSelectedItems([]);
-  }, [outletid]);
 
   const itemOptions = items?.map((row) => ({
     value: row.id,
@@ -121,7 +113,6 @@ export default function Page({}) {
     if (token) {
       const decoded = jwtDecode(token.token);
       setRole(decoded.role);
-      setOutletid(decoded.outlet_id);
       setName(decoded.name);
     }
   }, []);
@@ -129,9 +120,8 @@ export default function Page({}) {
   useEffect(() => {
     if (!token) return;
     loadData();
-    getOutlets();
     getItems();
-  }, [currentPage, search, outletId, token]);
+  }, [currentPage, search, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -155,12 +145,12 @@ export default function Page({}) {
 
     try {
       const newData = {
-        outlet_id: data?.outlet_id,
         kode_po: data?.kode_po,
         date_po: new Date(data.date_po).toISOString(),
         items: data?.details.map((detail) => ({
           item_id: detail?.item_id,
           quantity: parseInt(detail?.qty, 10),
+          price: parseInt(detail?.price, 10),
         })),
       };
 
@@ -207,24 +197,15 @@ export default function Page({}) {
       page: currentPage,
       search,
       perPage: itemsPerPage,
-      outlet_id: outletId,
     });
   }
 
   const addDetail = (e) => {
     e.preventDefault();
-    if (!outletid) {
-      toast({
-        title: "Please select an outlet first",
-        description: "You must select an outlet before adding items.",
-        variant: "destructive",
-      });
-      return;
-    }
-    append({ item_id: "", qty: 1 });
+    append({ item_id: "", price: "", qty: 1 });
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     const element = document.getElementById("receptions-details");
     const opt = {
       margin: 0.5,
@@ -234,6 +215,7 @@ export default function Page({}) {
       jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
     };
 
+    const html2pdf = (await import("html2pdf.js")).default;
     html2pdf().from(element).set(opt).save();
   };
 
@@ -249,9 +231,19 @@ export default function Page({}) {
   };
 
   return (
-    <div className="bg-slate-50 w-full min-h-screen py-24 antialiased">
-      <div className="container mx-auto px-4">
-        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-lg shadow-slate-200/70 border border-slate-100">
+      !isClient ? (
+        <div className="bg-slate-50 w-full min-h-screen py-24 antialiased">
+          <div className="container mx-auto px-4 flex items-center justify-center h-[calc(100vh-6rem)]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-slate-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-50 w-full min-h-screen py-24 antialiased">
+          <div className="container mx-auto px-4">
+            <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-lg shadow-slate-200/70 border border-slate-100">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
               <Button
@@ -271,25 +263,7 @@ export default function Page({}) {
             </div>
 
             <div className="flex items-center gap-3">
-              {role === "ADMIN" && (
-                <div className="relative">
-                  <select
-                    id="outlet_id_filter"
-                    className="h-11 appearance-none border border-slate-300 rounded-lg w-full sm:w-48 text-sm py-1 pl-4 pr-10 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-                    value={outletId}
-                    onChange={(e) => {
-                      setOutletId(e.target.value);
-                    }}
-                  >
-                    <option value="">All Outlets</option>
-                    {outlets?.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {row.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Admin only section removed - single outlet */}
               <Button
                 className="h-11 px-5 inline-flex items-center justify-center rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-all font-semibold gap-2 shadow-sm hover:shadow-md transform hover:-translate-y-px"
                 onClick={() => {
@@ -336,9 +310,6 @@ export default function Page({}) {
                     User
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Outlet
-                  </TableHead>
-                  <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Order Date
                   </TableHead>
                   <TableHead className="p-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -361,7 +332,6 @@ export default function Page({}) {
                       {moment(data.created_at).format("DD MMM YYYY - HH:mm:ss")}
                     </TableCell>
                     <TableCell className="p-4 text-slate-600">{data.user?.name}</TableCell>
-                    <TableCell className="p-4 text-slate-800 font-semibold">{data.outlet?.name}</TableCell>
                     <TableCell className="p-4 text-slate-600">{moment(data.date_po).format("DD MMM YYYY")}</TableCell>
                     <TableCell className="p-4 text-center">
                       <div className="flex justify-center gap-2">
@@ -388,7 +358,7 @@ export default function Page({}) {
                 />
                 <p className="text-xl font-semibold">No Receptions Found</p>
                 <p className="text-sm text-slate-400">
-                  Try adjusting your search or filters to find what you're
+                  Try adjusting your search or filters to find what you&apos;re
                   looking for.
                 </p>
               </div>
@@ -473,39 +443,13 @@ export default function Page({}) {
                   </div>
                 </div>
 
-                {/* Outlet - Full Width */}
+                {/* Outlet - auto-set to single outlet */}
                 <div className="sm:col-span-2">
                   <input
                     type="hidden"
                     {...register("user_id")}
-                    value={jwtDecode(nookies.get("token").token).user_id}
+                    value={jwtDecode(nookies.get("token").token).userToken}
                   />
-                  {role === "ADMIN" ? (
-                    <div>
-                      <Label htmlFor="outlet_id" className="font-medium text-slate-700">
-                        Outlet <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        id="outlet_id"
-                        className="mt-1"
-                        options={outletOptions}
-                        onChange={(selectedOption) => {
-                          setValue("outlet_id", selectedOption.value, { shouldValidate: true });
-                          setOutletid(selectedOption.value);
-                        }}
-                        placeholder="Select Outlet"
-                        required
-                      />
-                       {errors.outlet_id && (
-                          <small className="text-red-500">{errors.outlet_id.message}</small>
-                        )}
-                    </div>
-                  ) : (
-                    <input
-                      type="hidden"
-                      {...register("outlet_id", { value: outletid })}
-                    />
-                  )}
                 </div>
               </div>
 
@@ -526,7 +470,8 @@ export default function Page({}) {
                     <thead className="bg-slate-100">
                       <tr>
                         <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase">No.</th>
-                        <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase w-3/5">Item</th>
+                        <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase w-2/5">Item</th>
+                        <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase">Purchase Price</th>
                         <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase">Quantity</th>
                         <th className="p-2 text-left text-xs font-semibold text-slate-600 uppercase">Action</th>
                       </tr>
@@ -550,6 +495,21 @@ export default function Page({}) {
                               placeholder="Select Item"
                               required
                             />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              className="h-10"
+                              placeholder="e.g., 5000"
+                              {...register(`details.${index}.price`, {
+                                required: "Price is required",
+                                min: { value: 0, message: "Min 0" },
+                              })}
+                            />
+                            {errors.details?.[index]?.price && (
+                              <small className="text-red-500">{errors.details[index].price.message}</small>
+                            )}
                           </td>
                           <td className="p-2">
                             <Input
@@ -666,7 +626,6 @@ export default function Page({}) {
                 <p><strong>No. Order:</strong> {selectedRow.kode_po}</p>
                 <p><strong>Cashier Name:</strong> {selectedRow.user?.name}</p>
                 <p><strong>Order date:</strong> {moment(selectedRow.date_po).format("DD MMM YYYY")}</p>
-                <p><strong>Outlet:</strong> {selectedRow.outlet?.name}</p>
               </div>
 
               <div className="rounded-xl border border-slate-200 overflow-hidden">
@@ -688,8 +647,8 @@ export default function Page({}) {
                         <td className="p-2 font-medium">{item.item?.name}</td>
                         <td className="p-2">{item.item?.unit}</td>
                         <td className="p-2 text-right">{item.quantity}</td>
-                        <td className="p-2 text-right">Rp {numeral(item.item?.price).format("0,0")}</td>
-                        <td className="p-2 text-right font-semibold">Rp {numeral(item.quantity * item.item?.price).format("0,0")}</td>
+                        <td className="p-2 text-right">Rp {numeral(item.price).format("0,0")}</td>
+                        <td className="p-2 text-right font-semibold">Rp {numeral(item.quantity * item.price).format("0,0")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -705,8 +664,9 @@ export default function Page({}) {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+</Dialog>
       )}
     </div>
-  );
+  )
+);
 }

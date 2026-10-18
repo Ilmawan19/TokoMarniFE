@@ -10,7 +10,6 @@ const Pos = () => {
   const router = useRouter();
   const [userInformation, setUserInformation] = useState({
     user_id: null,
-    outlet_id: null,
   });
 
   const createOrder = async () => {
@@ -29,13 +28,12 @@ const Pos = () => {
       return {
         ...prev,
         user_id: decoded.userToken,
-        outlet_id: decoded.outlet_id,
       };
     });
   }, [token]);
 
   useEffect(() => {
-    if (userInformation.user_id && userInformation.outlet_id) {
+    if (userInformation.user_id) {
       createOrder();
     }
   }, [userInformation]);

@@ -24,6 +24,7 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
   const audioRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [selectedOrder, setSetselectedOrder] = useState(orderDetails.id || "");
   const params = useParams();
   const router = useRouter();
@@ -32,16 +33,21 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
   const { update: cancelOrder } = useCrud(`orders/${params.id}/cancel`);
   const { update: holdOrder } = useCrud(`orders/${params.id}/hold`);
   const { update: successOrder } = useCrud(`orders/${params.id}/success`);
-  const { fetchAllData: getOrderOnHold, data: orderOnHold, outletId } = useCrud(`orders/hold`);
+  const { fetchAllData: getOrderOnHold, data: orderOnHold } = useCrud(`orders/hold`);
 
   useEffect(() => {
     getOrderData();
   }, [orderDetails]);
 
   useEffect(() => {
-    if (!outletId) return;
-    getOrderOnHold({ outlet_id: outletId });
-  }, [isCancel, outletId]);
+    if (paymentMethod === "QRIS" && orderData?.total_payment) {
+      setAmount(numeral(orderData.total_payment).format('0,0'));
+    }
+  }, [paymentMethod, orderData?.total_payment]);
+
+  useEffect(() => {
+    getOrderOnHold();
+  }, [isCancel]);
 
   useEffect(() => {
     if (selectedOrder) {
@@ -129,16 +135,46 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
           <h1 className="text-2xl font-bold text-slate-800">Payment</h1>
           <select
             name="payment_method"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
             className="bg-slate-100 border-transparent rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition capitalize"
           >
             <option>Cash</option>
-            <option>Card</option>
             <option>QRIS</option>
           </select>
         </div>
 
         {/* Keypad & Input */}
         <div className="flex-grow bg-slate-50/70 p-4 sm:p-6">
+          {paymentMethod === "QRIS" ? (
+            <div className="h-full flex flex-col items-center justify-center py-8">
+              <div className="w-16 h-16 rounded-full bg-sky-100 flex items-center justify-center mb-5">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 4h2m-6-7h2m0 4h2m6 1v4m-2 0h2m-8-6h-2m6 0h2m-6-4h2" />
+                </svg>
+              </div>
+              <p className="text-2xl font-bold text-slate-800 mb-1">QRIS Payment</p>
+              <p className="text-sm text-slate-500 text-center max-w-xs mb-5">
+                Minta pelanggan memindai kode QRIS pada tombol &quot;Bayar QRIS&quot; untuk menyelesaikan pembayaran.
+              </p>
+              <div className="flex items-baseline gap-2 mb-8">
+                <span className="text-sm text-slate-500">Amount Due</span>
+                <span className="text-3xl font-mono font-bold text-sky-600">
+                  Rp {numeral(orderData?.total_payment || 0).format('0,0')}
+                </span>
+              </div>
+              <Button
+                disabled={orderDetails.length <= 0}
+                className="w-full max-w-xs h-14 text-base font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-300"
+                onClick={() => successOrderHandler()}
+              >
+                Pembayaran Selesai
+              </Button>
+              <p className="text-xs text-slate-400 mt-3">
+                Klik setelah pelanggan menyelesaikan pembayaran QRIS.
+              </p>
+            </div>
+          ) : (
           <div className="grid grid-cols-4 gap-3">
             <Input
               className="col-span-4 h-16 w-full bg-white text-right text-4xl font-mono tracking-wider border-slate-200 focus:ring-2 focus:ring-sky-500"
@@ -169,6 +205,7 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
               <Button onClick={deleteAmountHandler} className={specialButtonClasses}>Del</Button>
             </div>
           </div>
+          )}
         </div>
 
         {/* Ringkasan & Aksi */}
@@ -233,12 +270,37 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
             <Dialog>
               <DialogTrigger asChild>
                 <Button
-                  disabled={parseInt(amount.replace(/,/g, '') || '0') < (orderData?.total_payment || 0) || orderDetails.length <= 0}
+                  disabled={paymentMethod === "QRIS"
+                    ? orderDetails.length <= 0
+                    : parseInt(amount.replace(/,/g, '') || '0') < (orderData?.total_payment || 0) || orderDetails.length <= 0}
                   className="w-full h-14 text-base font-semibold rounded-md transition-all duration-300 bg-sky-600 text-white hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
-                  Pay
+                  {paymentMethod === "QRIS" ? "Bayar QRIS" : "Pay"}
                 </Button>
               </DialogTrigger>
+              {paymentMethod === "QRIS" ? (
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="text-center text-xl font-bold">Scan QRIS</DialogTitle>
+                  <DialogDescription className="text-center text-slate-500 pt-2">
+                    Pindai kode QRIS berikut untuk menyelesaikan pembayaran sebesar{" "}
+                    <span className="font-semibold text-slate-700">Rp {numeral(orderData?.total_payment || 0).format('0,0')}</span>.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-4 py-4">
+                  <img
+                    src="/images/qris.jpeg"
+                    alt="QRIS"
+                    className="w-56 h-56 object-contain rounded-xl border border-slate-200"
+                  />
+                </div>
+                <div className="flex justify-center mt-2">
+                  <DialogClose asChild>
+                    <Button variant="outline" className="h-11 px-8">Tutup</Button>
+                  </DialogClose>
+                </div>
+              </DialogContent>
+              ) : (
               <DialogContent>
                  <DialogHeader>
                   <DialogTitle className="text-center text-xl font-bold">Confirm Payment</DialogTitle>
@@ -253,6 +315,7 @@ const Transaction = ({ orderDetails, amount, setAmount }) => {
                   <Button onClick={successOrderHandler} className="w-full h-11 bg-sky-600 text-white hover:bg-sky-700">Complete Payment</Button>
                 </div>
               </DialogContent>
+              )}
             </Dialog>
           </div>
         </div>

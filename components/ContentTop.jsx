@@ -31,7 +31,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function ContentTop() {
   const [token, setToken] = useState(null);
-  const [outletId, setOutletId] = useState("");
   const [totalsData, setTotalsData] = useState({ amount: 0, count: 0 });
   const [role, setRole] = useState("");
   const [isDailyTransactionModalOpen, setDailyTransactionModalOpen] = useState(false);
@@ -41,7 +40,6 @@ function ContentTop() {
   const [today, setToday] = useState("");
 
   const { data: totalsResult, fetchAllData: fetchTotals } = useCrud("histories/totals");
-  const { data: outlets, fetchAllData: fetchOutlets } = useCrud("outlets");
   const { data: lowStocks, fetchAllData: fetchLowStocks } = useCrud("items/low-stock");
 
   useEffect(() => {
@@ -66,25 +64,12 @@ function ContentTop() {
   }, []);
 
 
-
   useEffect(() => {
-    // Jangan lakukan fetch jika token belum siap
     if (!token) return;
 
-    // Fetch data utama
-    fetchTotals({ outlet_id: outletId, period: "day" });
-    fetchLowStocks({ outlet_id: outletId });
-
-    // Fetch outlets hanya sekali jika belum ada
-    if (!outlets || outlets.length === 0) {
-        fetchOutlets();
-    }
-    
-    // Nonaktifkan peringatan dependensi karena fetchTotals dan fetchLowStocks
-    // adalah fungsi yang tidak stabil dari hook custom Anda.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outletId, token]); // Hanya bergantung pada outletId dan token
-
+    fetchTotals({ period: "day" });
+    fetchLowStocks();
+  }, [token]);
 
   useEffect(() => {
     if (totalsResult?.summary) {
@@ -98,7 +83,6 @@ function ContentTop() {
   }, [totalsResult]);
 
   
-
   return (
     <div className="w-full p-6 md:p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
@@ -108,29 +92,6 @@ function ContentTop() {
           </h1>
           <p className="text-slate-500 mt-1">{today}</p>
         </div>
-        {role === "ADMIN" && (
-          <div className="flex items-center gap-3 mt-4 sm:mt-0">
-            <label
-              htmlFor="outlet_id"
-              className="text-sm font-medium text-slate-600 flex-shrink-0"
-            >
-              Filter Outlet:
-            </label>
-            <select
-              id="outlet_id"
-              className="w-full sm:w-auto border rounded-lg text-sm py-2 px-3 bg-slate-50 border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
-              value={outletId}
-              onChange={(e) => setOutletId(e.target.value)}
-            >
-              <option value="">Semua Outlet</option>
-              {outlets?.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

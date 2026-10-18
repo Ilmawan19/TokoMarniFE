@@ -21,8 +21,8 @@ export function middleware(req) {
     const decoded = jwtDecode(token.value);
     const role = decoded.role;
 
-    const staffRestrictedRoutes = ['/dashboard/history', '/dashboard/pos', '/dashboard/users', '/dashboard/outlet', '/dashboard/items'];
-    const kasirRestrictedRoutes = ['/dashboard/users', '/dashboard/outlet', '/dashboard/items', '/dashboard/penerimaan'];
+    const staffRestrictedRoutes = ['/dashboard/history', '/dashboard/pos', '/dashboard/users', '/dashboard/items', '/dashboard/laporan'];
+    const kasirRestrictedRoutes = ['/dashboard/users', '/dashboard/items', '/dashboard/penerimaan', '/dashboard/laporan'];
     const adminRestrictedRoutes = ['/dashboard/pos'];
 
     if (role === 'STAFF' && staffRestrictedRoutes.some((route) => pathname.startsWith(route))) {

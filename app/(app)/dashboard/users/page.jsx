@@ -59,15 +59,11 @@ export default function Page() {
     totalPages,
   } = useCrud("users");
 
-  const { data: outlets, fetchAllData: fetchAllOutletsData } =
-    useCrud("outlets");
-
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   useEffect(() => {
     if (!token) return;
     loadData();
-    fetchAllOutletsData();
   }, [currentPage, search, sortBy, token]);
   
   useEffect(() => {
@@ -215,7 +211,7 @@ export default function Page() {
 
           <div className="rounded-xl border border-slate-200 overflow-hidden">
             <Table>
-              <TableHeader className="bg-slate-100/80">
+<TableHeader className="bg-slate-100/80">
                 <TableRow>
                   <TableHead className="w-[60px] p-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     No.
@@ -225,9 +221,6 @@ export default function Page() {
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Email
-                  </TableHead>
-                  <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Outlet
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Role
@@ -248,7 +241,6 @@ export default function Page() {
                     </TableCell>
                     <TableCell className="p-4 text-slate-800 font-semibold">{row.name}</TableCell>
                     <TableCell className="p-4 text-slate-600">{row.email}</TableCell>
-                    <TableCell className="p-4 text-slate-600">{row.outlet?.name || "-"}</TableCell>
                     <TableCell className="p-4 text-slate-600">
                       <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                         row.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-700' : 
@@ -263,21 +255,21 @@ export default function Page() {
                         <Button
                            variant="ghost"
                            className="h-9 w-9 p-0 flex items-center justify-center rounded-md bg-sky-100 text-sky-600 hover:bg-sky-200 hover:text-sky-700 transition-all"
-                          onClick={() => handleEdit(row)}
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="h-9 w-9 p-0 flex items-center justify-center rounded-md bg-rose-100 text-rose-600 hover:bg-rose-200 hover:text-rose-700 transition-all"
-                          onClick={() => {
-                            setDataToDelete(row);
-                            setDeleteWarningOpen(true);
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </Button>
-                      </div>
+                           onClick={() => handleEdit(row)}
+                         >
+                           <FontAwesomeIcon icon={faEdit} />
+                         </Button>
+                         <Button
+                           variant="ghost"
+                           className="h-9 w-9 p-0 flex items-center justify-center rounded-md bg-rose-100 text-rose-600 hover:bg-rose-200 hover:text-rose-700 transition-all"
+                           onClick={() => {
+                             setDataToDelete(row);
+                             setDeleteWarningOpen(true);
+                           }}
+                         >
+                           <FontAwesomeIcon icon={faTrash} />
+                         </Button>
+                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -292,7 +284,7 @@ export default function Page() {
                 />
                 <p className="text-xl font-semibold">No Users Found</p>
                 <p className="text-sm text-slate-400">
-                  Try adjusting your search or filters to find what you're looking for.
+                  Try adjusting your search or filters to find what you&apos;re looking for.
                 </p>
               </div>
             )}
@@ -350,37 +342,19 @@ export default function Page() {
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-6 pt-4"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                  <Label htmlFor="outlet_id" className="text-left font-medium text-slate-700">Outlet <span className="text-red-500">*</span></Label>
-                  <select
-                      id="outlet_id"
-                      className="h-11 border border-input bg-background rounded-md px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      {...register("outlet_id", { required: true })}
-                  >
-                      <option value="">Select an outlet...</option>
-                      {outlets.map((outlet) => (
-                          <option key={outlet.id} value={outlet.id}>
-                              {outlet.name}
-                          </option>
-                      ))}
-                  </select>
-                  {usersError?.outlet_id && <small className="text-red-500">{usersError.outlet_id}</small>}
-              </div>
-              <div className="flex flex-col gap-2">
-                  <Label htmlFor="role" className="text-left font-medium text-slate-700">Role <span className="text-red-500">*</span></Label>
-                  <select
-                      id="role"
-                      className="h-11 border border-input bg-background rounded-md px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      {...register("role", { required: true })}
-                  >
-                      <option value="">Select a role...</option>
-                      <option value="KASIR">KASIR</option>
-                      <option value="STAFF">STAFF</option>
-                      <option value="ADMIN">ADMIN</option>
-                  </select>
-                  {usersError?.role && <small className="text-red-500">{usersError.role}</small>}
-              </div>
+            <div className="flex flex-col gap-2">
+                <Label htmlFor="role" className="text-left font-medium text-slate-700">Role <span className="text-red-500">*</span></Label>
+                <select
+                    id="role"
+                    className="h-11 border border-input bg-background rounded-md px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    {...register("role", { required: true })}
+                >
+                    <option value="">Select a role...</option>
+                    <option value="KASIR">KASIR</option>
+                    <option value="STAFF">STAFF</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+                {usersError?.role && <small className="text-red-500">{usersError.role}</small>}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -399,10 +373,17 @@ export default function Page() {
                 <Input
                     id="email"
                     type="email"
-                    placeholder="e.g., john.doe@example.com"
+                    placeholder="e.g., john.doe@gmail.com"
                     className="h-11"
-                    {...register("email", { required: true })}
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[^\s@]+@gmail\.com$/i,
+                        message: "Email harus menggunakan @gmail.com",
+                      },
+                    })}
                 />
+                {errors.email && <small className="text-red-500">{errors.email.message}</small>}
                 {usersError?.email && <small className="text-red-500">{usersError.email}</small>}
             </div>
 

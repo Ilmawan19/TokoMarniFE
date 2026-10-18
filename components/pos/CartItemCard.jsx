@@ -87,8 +87,11 @@ const CartItemCard = ({ details, fetchOrder }) => {
     try {
       if (quantity === "") {
         return;
-      } else if (quantity <= 0) {
+      } else if (quantity < 1) {
         setQuantity(details.quantity);
+        return;
+      } else if (quantity > details.items.stock) {
+        setQuantity(details.items.stock);
         return;
       } else {
         await updateOrderDetail("", {
