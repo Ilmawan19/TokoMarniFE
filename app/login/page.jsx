@@ -24,7 +24,7 @@ const testimonials = [
 
 export default function Login() {
     const router = useRouter();
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [currentTestimonial, setCurrentTestimonial] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -38,7 +38,7 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = await login({ email, password });
+            const token = await login({ username, password });
             const expires = new Date();
             expires.setHours(expires.getHours() + 6);
             document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()}`;
@@ -92,14 +92,15 @@ export default function Login() {
 
                         <form onSubmit={handleSubmit}>
                             <div className="mb-6">
-                                <label htmlFor="email" className="block text-slate-600 font-medium text-sm mb-2">Email</label>
+                                <label htmlFor="username" className="block text-slate-600 font-medium text-sm mb-2">Username</label>
                                 <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     className="bg-white border border-slate-300 text-slate-900 rounded-lg focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 w-full p-3.5 placeholder-slate-400 transition-all duration-300"
-                                    placeholder="contoh@gmail.com"
+                                    placeholder="Masukkan username"
+                                    autoComplete="username"
                                     required
                                 />
                             </div>
@@ -116,7 +117,7 @@ export default function Login() {
                                 />
                             </div>
 
-                            {error && <p className="text-red-500 text-sm mb-4 text-center">{error.message || 'Email atau password salah.'}</p>}
+                            {error && <p className="text-red-500 text-sm mb-4 text-center">{error.message || 'Username atau password salah.'}</p>}
                             
                             <button
                                 type="submit"

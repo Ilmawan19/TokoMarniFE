@@ -137,9 +137,14 @@ export default function Page() {
                     <Label htmlFor="tunjanganRokok" className="text-right">Tunjangan Pokok</Label>
                     <Input id="tunjanganRokok" className="col-span-3" {...register("tunjanganRokok")} />
                 </div>
+                {!email && (
+                    <p className="text-sm text-red-500">
+                        User ini belum memiliki email, slip gaji tidak dapat dikirim.
+                    </p>
+                )}
                 <div className="flex justify-end gap-2 mt-4">
                     <Button type="button" variant="buttonCancel" onClick={onClose}>Cancel</Button>
-                    <Button type="submit" className="col-span-3" variant="button2" disabled={loading}>Kirim Slip Gaji</Button>
+                    <Button type="submit" className="col-span-3" variant="button2" disabled={loading || !email}>Kirim Slip Gaji</Button>
                 </div>
             </form>
         );
@@ -182,7 +187,7 @@ export default function Page() {
                                     <TableRow key={row.id} className="border-b hover:bg-gray-100 transition-colors">
                                         <TableCell className="p-2 text-center font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
                                         <TableCell className="p-2">{row.name}</TableCell>
-                                        <TableCell className="p-2">{row.email}</TableCell>
+                                        <TableCell className="p-2">{row.email || "-"}</TableCell>
                                         <TableCell className="p-2">{row.role}</TableCell>
                                         <TableCell className="p-2 text-center">
                                             <Button variant="button2"  onClick={() => {

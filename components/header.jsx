@@ -166,7 +166,7 @@ export const Header = () => {
             >
                 <div className="px-4 py-3 border-b border-slate-100">
                   <p className="font-semibold text-sm text-slate-800 truncate">{token?.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{token?.email || 'Tidak ada email terdaftar'}</p>
+                  <p className="text-xs text-slate-500 truncate">{token?.username ? `@${token.username}` : token?.email || 'Tidak ada username terdaftar'}</p>
                 </div>
                 <div className="p-2">
                   <button

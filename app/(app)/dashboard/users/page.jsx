@@ -203,7 +203,7 @@ export default function Page() {
             />
             <Input
               className="w-full max-w-sm bg-slate-100 border-transparent rounded-lg h-11 text-base pl-11 pr-4 focus:ring-2 focus:ring-sky-500 focus:bg-white focus:border-sky-500 transition"
-              placeholder="Search by name, email..."
+              placeholder="Search by name, username, email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -218,6 +218,9 @@ export default function Page() {
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Name
+                  </TableHead>
+                  <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Username
                   </TableHead>
                   <TableHead className="p-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Email
@@ -240,7 +243,8 @@ export default function Page() {
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </TableCell>
                     <TableCell className="p-4 text-slate-800 font-semibold">{row.name}</TableCell>
-                    <TableCell className="p-4 text-slate-600">{row.email}</TableCell>
+                    <TableCell className="p-4 text-slate-600">{row.username}</TableCell>
+                    <TableCell className="p-4 text-slate-600">{row.email || "-"}</TableCell>
                     <TableCell className="p-4 text-slate-600">
                       <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                         row.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-700' : 
@@ -369,18 +373,43 @@ export default function Page() {
             </div>
 
             <div className="flex flex-col gap-2">
-                <Label htmlFor="email" className="text-left font-medium text-slate-700">Email Address <span className="text-red-500">*</span></Label>
+                <Label htmlFor="username" className="text-left font-medium text-slate-700">Username <span className="text-red-500">*</span></Label>
+                <Input
+                    id="username"
+                    placeholder="e.g., john.doe"
+                    className="h-11"
+                    {...register("username", {
+                      required: "Username is required",
+                      minLength: {
+                        value: 3,
+                        message: "Username must be at least 3 characters long",
+                      },
+                      maxLength: {
+                        value: 50,
+                        message: "Username must be at most 50 characters long",
+                      },
+                      pattern: {
+                        value: /^[a-zA-Z0-9._-]+$/,
+                        message: "Username can only contain letters, numbers, dots, underscores, and hyphens",
+                      },
+                    })}
+                />
+                {errors.username && <small className="text-red-500">{errors.username.message}</small>}
+                {usersError?.username && <small className="text-red-500">{usersError.username}</small>}
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <Label htmlFor="email" className="text-left font-medium text-slate-700">Email Address (Optional)</Label>
                 <Input
                     id="email"
                     type="email"
                     placeholder="e.g., john.doe@gmail.com"
                     className="h-11"
                     {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^\s@]+@gmail\.com$/i,
-                        message: "Email harus menggunakan @gmail.com",
-                      },
+                      validate: (value) =>
+                        !value ||
+                        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ||
+                        "Email must be a valid email address",
                     })}
                 />
                 {errors.email && <small className="text-red-500">{errors.email.message}</small>}
